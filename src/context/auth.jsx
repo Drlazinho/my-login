@@ -3,20 +3,26 @@ import { useNavigate } from 'react-router-dom'
 
 export const AuthContext = createContext()
 
-export const AuthProvider = ({children}) => {
+export const AuthProvider = ({ children }) => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const recoveredUser = localStorage.getItem('user')
 
-    if(recoveredUser) {
-      setUser(JSON.parse(recoveredUser));
+    if (recoveredUser) {
+      setUser(JSON.parse(recoveredUser))
     }
 
     setLoading(false)
   }, [])
+
+  window.addEventListener('beforeunload', function (e) {
+    e.preventDefault()
+    e.returnValue = ''
+    localStorage.removeItem('user')
+  })
 
   const login = (email, password) => {
     console.log('login auth', { email, password })
@@ -25,21 +31,22 @@ export const AuthProvider = ({children}) => {
 
     const loggedUser = {
       id: '123',
-      email,
-    };
+      email
+    }
 
-    localStorage.setItem("user", JSON.stringify(loggedUser));
+    localStorage.setItem('user', JSON.stringify(loggedUser))
 
-    if(password === "secret") {
+    if (password === 'secret') {
       setUser(loggedUser)
-      navigate("/")
+      navigate('/')
     }
   }
 
   const logout = () => {
     console.log('logout')
+    localStorage.removeItem('user')
     setUser(null)
-    navigate("/login")
+    navigate('/login')
   }
 
   return (
