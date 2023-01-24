@@ -1,5 +1,6 @@
 import { Children, createContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api, createSession } from '../services/api'
 
 export const AuthContext = createContext()
 
@@ -10,9 +11,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const recoveredUser = localStorage.getItem('user')
+    const token = localStorage.getItem("token")
 
-    if (recoveredUser) {
+    if (recoveredUser && token) {
       setUser(JSON.parse(recoveredUser))
+      api.defaults.headers.Authorization = `Bearer ${token}`
+
     }
 
     setLoading(false)
@@ -24,27 +28,28 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user')
   })
 
-  const login = (email, password) => {
+  const login = async (email, password) => {
     console.log('login auth', { email, password })
 
     // api criar uma session
+    const response = await createSession(email, password)
 
-    const loggedUser = {
-      id: '123',
-      email
-    }
+    const loggedUser = response.data.user
+    const token = response.data.token
 
     localStorage.setItem('user', JSON.stringify(loggedUser))
+    localStorage.setItem('token', JSON.stringify(token))
 
-    if (password === 'secret') {
-      setUser(loggedUser)
-      navigate('/')
-    }
+    api.defaults.headers.Authorization = `Bearer ${token}`
+
+    setUser(loggedUser)
+    navigate('/')
   }
 
   const logout = () => {
     console.log('logout')
     localStorage.removeItem('user')
+    api.defaults.headers.Authorization = null;
     setUser(null)
     navigate('/login')
   }
